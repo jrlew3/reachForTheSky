@@ -14,6 +14,7 @@ class Cloud:
 		self.y = 0
 		self.width = width
 		self. height = height
+		self.direction = 1 #1 for right, -1 for left
 		
 		self.cloud = pygame.image.load('cloud.png')
 		self.cloud = pygame.transform.scale(self.cloud, (self.width,self.height))
@@ -54,9 +55,11 @@ class Cloud:
 		if self.check_region("left", image):
 			if self.xpos <  display_width - self.stepsize - self.width:  
 				self.x = self.stepsize
+				self.direction = 1
 		elif self.check_region("right", image):
 			if self.xpos > self.stepsize:
 				self.x = -self.stepsize
+				self.direction = -1
 		if self.check_region("up", image):
 			if self.ypos < display_height - self.stepsize - self.height:
 				self.y = self.stepsize
@@ -67,10 +70,10 @@ class Cloud:
 	def drift(self): 
 		if self.x == 0 and self.y == 0: 
 			if self.xpos <= self.driftsize:
-				self.driftsize = abs(self.driftsize)
+				self.direction = 1
 			elif self.xpos >= display_width - self.width - self.driftsize: 
-				self.driftsize = -abs(self.driftsize)
-			self.x = self.driftsize
+				self.direction = -1
+			self.x = self.direction * self.driftsize
 		
 		self.move()
 
