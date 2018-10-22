@@ -11,7 +11,7 @@ cloudy = 100
 x = 0
 y = 0
 stepsize = 10
-
+driftsize = 2
 
 cloud = pygame.image.load('cloud.png')
 cloud = pygame.transform.scale(cloud, (cloud_width,cloud_height))
@@ -20,7 +20,7 @@ cloud_left = pygame.Rect(cloudx, cloudy, cloud_width/2, cloud_height)
 cloud_up = pygame.Rect(cloudx, cloudy, cloud_width, cloud_height/2)
 cloud_down = pygame.Rect(cloudx, cloudy +cloud_height/2, cloud_width, cloud_height/2) 
 threshold = 2  # the change in color required to move the cloud 
-
+bw_thresh = 50
 
 display_width = 1280
 display_height = 720
