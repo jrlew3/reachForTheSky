@@ -22,8 +22,7 @@ while(1):
 	diff = cv.absdiff(initial_frame, frame)
 	gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
 
-	thresh = 50
-	diff = cv.threshold(gray, thresh, 255, cv.THRESH_BINARY)[1]
+	diff = cv.threshold(gray, bw_thresh, 255, cv.THRESH_BINARY)[1]
 	#(thresh, diff) = cv.threshold(gray, 10, 255 , cv.THRESH_BINARY | cv.THRESH_OTSU)
 	#cv.imshow("diff", gray)
 	screen.fill([0,0,0])
@@ -62,6 +61,24 @@ while(1):
 
 		x = 0
 		y = 0
+		print("move the clouds\n")
+	elif cloudx <= driftsize:
+		driftsize = abs(driftsize)
+		print("change to right\n")
+	elif cloudx < display_width - cloud_width - driftsize: 
+		cloudx += driftsize 
+		cloud_right.move_ip(driftsize,0)
+		cloud_left.move_ip(driftsize,0)
+		cloud_up.move_ip(driftsize,0)
+		cloud_down.move_ip(driftsize,0)
+		if 0 < driftsize:
+			print("move right\n")
+		else:
+			print("move left\n")
+	else: 
+		driftsize = -abs(driftsize)
+		print("change to left\n")
+
 
 	pygame.display.update()
 	
