@@ -4,17 +4,17 @@ import pygame
 import sys
 from pygame.locals import *
 from init import *
-from cloud import *
+from Cloud import *
 
 #Initialize video feed
 cap = cv.VideoCapture(0)
-
 ret, initial_frame = cap.read()
 
 #Initialize pygame display
 pygame.init()
 pygame.display.set_caption("Reach for the Sky")
 screen = pygame.display.set_mode([display_width, display_height])
+c = Cloud(0, 100, 350, 200)
 
 
 while(1):
@@ -22,11 +22,13 @@ while(1):
 	
 	diff = cv.absdiff(initial_frame, frame)
 	gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
-
 	diff = cv.threshold(gray, bw_thresh, 255, cv.THRESH_BINARY)[1]
+
 	screen.fill([0,0,0])
 	image = display_frame(screen, diff)
 	screen.blit(c.cloud,(c.xpos, c.ypos))
+	pygame.draw.rect(screen, 0xCCFFFF, c.right)
+	c.update_pos(image)
 
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
@@ -34,11 +36,6 @@ while(1):
 				ret, initial_frame = cap.read() 
 			else:
 				exit(cap)
-
-
-
-
-
 
 
 	pygame.display.update()

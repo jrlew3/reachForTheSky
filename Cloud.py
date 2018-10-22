@@ -3,6 +3,7 @@ import cv2 as cv
 import pygame
 import sys
 from pygame.locals import *
+from init import *
 
 
 class Cloud: 
@@ -26,19 +27,21 @@ class Cloud:
 
 
 	def move(self):
-		self.right.move_ip(x,y)
-		self.left.move_ip(x,y)
-		self.up.move_ip(x,y)
-		self.down.move_ip(x,y)
+		self.right.move_ip(self.x,self.y)
+		self.left.move_ip(self.x,self.y)
+		self.up.move_ip(self.x,self.y)
+		self.down.move_ip(self.x,self.y)
 		self.xpos += self.x
 		self.ypos += self.y
+		self.x = 0
+		self.y = 0 
 
 	def check_region(self, region, image): 
 		if region == "left":
 			subcloud = self.left
 		elif region == "right":
 			subcloud = self.right
-		elif region == "up"
+		elif region == "up":
 			subcloud = self.up
 		elif region == "down":
 			subcloud = self.down 
@@ -50,37 +53,30 @@ class Cloud:
 	def check_movement(self, image):
 		if self.check_region("left", image):
 			if self.xpos <  display_width - self.stepsize - self.width:  
-				self.x = stepsize
+				self.x = self.stepsize
 		elif self.check_region("right", image):
-			if self.xpos > stepsize:
-				self.x = -stepsize
+			if self.xpos > self.stepsize:
+				self.x = -self.stepsize
 		if self.check_region("up", image):
 			if self.ypos < display_height - self.stepsize - self.height:
-				self.y = stepsize
+				self.y = self.stepsize
 		elif self.check_region("down", image):
 			if self.ypos > self.stepsize:
-				self.y = -stepsize
+				self.y = -self.stepsize
 
 	def drift(self): 
-		if self.x != 0 or self.y != 0: 
-			self.move(self.x, self.y)
-			self.x = 0 
-			self.y = 0
-			print("move the clouds \n")
-		elif self.xpos <= self.driftsize:
-			self.driftsize = abs(self.driftsize)
-			print("change to right\n")
-		elif self.xpos < display_width - self.width - self.driftsize: 
-			self.xpos += self.driftsize 
-			self.move(driftsize, 0)
-			if 0 < self.driftsize:
-				print("move right\n")
-			else:
-				print("move left\n")
-		else: 
-			self.driftsize = -abs(self.driftsize)
-			print("change to left\n")
-			
+		if self.x == 0 and self.y == 0: 
+			if self.xpos <= self.driftsize:
+				self.driftsize = abs(self.driftsize)
+			elif self.xpos >= display_width - self.width - self.driftsize: 
+				self.driftsize = -abs(self.driftsize)
+			self.x = self.driftsize
+		
+		self.move()
+
+	def update_pos(self, image):
+		self.check_movement(image)
+		self.drift()
 
 
 
