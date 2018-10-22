@@ -11,6 +11,7 @@ cloudy = 100
 x = 0
 y = 0
 stepsize = 10
+driftsize = 2
 
 
 cloud = pygame.image.load('cloud.png')
@@ -19,8 +20,8 @@ cloud_right = pygame.Rect(cloudx + cloud_width/2, cloudy, cloud_width/2, cloud_h
 cloud_left = pygame.Rect(cloudx, cloudy, cloud_width/2, cloud_height)
 cloud_up = pygame.Rect(cloudx, cloudy, cloud_width, cloud_height/2)
 cloud_down = pygame.Rect(cloudx, cloudy +cloud_height/2, cloud_width, cloud_height/2) 
-threshold = 2  # the change in color required to move the cloud 
-
+thresh = 5  # the change in color required to move the cloud 
+bw_thresh = 50
 
 display_width = 1280
 display_height = 720
@@ -63,4 +64,4 @@ def check_movement(direction, image):
 		subcloud = cloud_down
 
 	avg_color = pygame.transform.average_color(image, subcloud)
-	return get_brightness(avg_color) > threshold 
+	return get_brightness(avg_color) > thresh 

@@ -4,6 +4,7 @@ import pygame
 import sys
 from pygame.locals import *
 from init import *
+from cloud import *
 
 #Initialize video feed
 cap = cv.VideoCapture(0)
@@ -23,11 +24,9 @@ while(1):
 	gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
 
 	diff = cv.threshold(gray, bw_thresh, 255, cv.THRESH_BINARY)[1]
-	#(thresh, diff) = cv.threshold(gray, 10, 255 , cv.THRESH_BINARY | cv.THRESH_OTSU)
-	#cv.imshow("diff", gray)
 	screen.fill([0,0,0])
 	image = display_frame(screen, diff)
-	screen.blit(cloud,(cloudx, cloudy))
+	screen.blit(c.cloud,(c.xpos, c.ypos))
 
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
@@ -36,48 +35,10 @@ while(1):
 			else:
 				exit(cap)
 
-	if check_movement("left", image):
-		if cloudx <  display_width - stepsize - cloud_width:  
-			x = stepsize
-	elif check_movement("right", image):
-		if cloudx > stepsize:
-			x = -stepsize
-	if check_movement("up", image):
-		if cloudy < display_height - stepsize - cloud_height:
-			y = stepsize
-	elif check_movement("down", image):
-		if cloudy > stepsize:
-			y = -stepsize
 
 
 
-	if x != 0 or y != 0:
-		cloud_right.move_ip(x,y)
-		cloud_left.move_ip(x,y)
-		cloud_up.move_ip(x,y)
-		cloud_down.move_ip(x,y)
-		cloudx += x
-		cloudy += y
 
-		x = 0
-		y = 0
-		print("move the clouds\n")
-	elif cloudx <= driftsize:
-		driftsize = abs(driftsize)
-		print("change to right\n")
-	elif cloudx < display_width - cloud_width - driftsize: 
-		cloudx += driftsize 
-		cloud_right.move_ip(driftsize,0)
-		cloud_left.move_ip(driftsize,0)
-		cloud_up.move_ip(driftsize,0)
-		cloud_down.move_ip(driftsize,0)
-		if 0 < driftsize:
-			print("move right\n")
-		else:
-			print("move left\n")
-	else: 
-		driftsize = -abs(driftsize)
-		print("change to left\n")
 
 
 	pygame.display.update()
