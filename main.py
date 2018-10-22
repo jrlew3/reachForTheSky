@@ -27,7 +27,6 @@ while(1):
 	screen.fill([0,0,0])
 	image = display_frame(screen, diff)
 	screen.blit(c.cloud,(c.xpos, c.ypos))
-	pygame.draw.rect(screen, 0xCCFFFF, c.right)
 	c.update_pos(image)
 
 	for event in pygame.event.get():
