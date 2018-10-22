@@ -21,8 +21,11 @@ while(1):
 	
 	diff = cv.absdiff(initial_frame, frame)
 	gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
-	(thresh, diff) = cv.threshold(gray, 10, 255 , cv.THRESH_BINARY | cv.THRESH_OTSU)
 
+	thresh = 50
+	diff = cv.threshold(gray, thresh, 255, cv.THRESH_BINARY)[1]
+	#(thresh, diff) = cv.threshold(gray, 10, 255 , cv.THRESH_BINARY | cv.THRESH_OTSU)
+	#cv.imshow("diff", gray)
 	screen.fill([0,0,0])
 	image = display_frame(screen, diff)
 	screen.blit(cloud,(cloudx, cloudy))
