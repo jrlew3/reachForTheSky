@@ -17,11 +17,9 @@ def display_frame(screen, frame):
 	screen.blit(frame,(0,0))
 	return frame
 
-def exit(cap):
+def exit():
 	#Close windows
-	cap.release()
 	pygame.quit()
-	cv.destroyAllWindows()
 
 def get_brightness(color):
 	return color[0] + color[1] + color[2]
