@@ -25,6 +25,6 @@ while True:
     # check for quit events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-        webcam.stop()
-        pygame.quit()
-        sys.exit()
+        	webcam.stop()
+        	pygame.quit()
+        	sys.exit()

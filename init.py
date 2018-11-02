@@ -8,7 +8,7 @@ thresh = 10  # the change in color required to move the cloud
 bw_thresh = 50
 
 display_width = 1280
-display_height = 720
+display_height = 736
 
 
 def display_frame(screen, frame):
