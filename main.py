@@ -34,11 +34,13 @@ while(1):
 			if event.key == K_SPACE:
 				ret, initial_frame = cap.read() 
 			else:
-				exit(cap)
+				exit()
 
 
 	pygame.display.update()
 	
 
-exit(cap)
+exit()
+
+    
 

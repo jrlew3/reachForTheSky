@@ -37,7 +37,7 @@ while 1:
 		continue
 
 	frameDelta = cv.absdiff(firstFrame, gray)
-	diff = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
+	diff = cv.threshold(frameDelta, 50, 255, cv.THRESH_BINARY)[1]
 	diff = cv.dilate(diff, kernel, iterations=2)
 	diff = cv.morphologyEx(diff, cv.MORPH_OPEN, kernel)
 
@@ -52,7 +52,7 @@ while 1:
 				ret, initial_frame = cap.read()
 				firstFrame = None
 			else:
-				exit(cap)
+				exit()
 
 	# press q to quit
 	key = cv.waitKey(1) & 0xFF
@@ -62,4 +62,4 @@ while 1:
 	pygame.display.update()
 
 
-exit(cap)
+exit()
