@@ -35,28 +35,6 @@ os.environ["SDL_VIDEODRIVER"] = "fbcon"
 os.environ["SDL_FBDEV"] = "/dev/fb0"
 os.putenv('SDL_FBDEV', '/dev/fb0')
 
-"""
-Code for setting up LCD screen
-os.putenv('SDL_MOUSEDRV', 'TSLIB')
-os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
-
-
-drivers = ['fbcon', 'fbi', 'fbturbo', 'directfb', 'svgalib']
-found = False
-for driver in drivers:
-    if not os.getenv('SDL_VIDEODRIVER'):
-        os.putenv('SDL_VIDEODRIVER', driver)
-    try:
-        pygame.display.init()
-    except pygame.error:
-        print ('Driver failed')
-        continue
-    found = True
-    break
-
-"""   
-
-
 #Set up camera
 camera = PiCamera()
 camera.framerate = 32
@@ -64,7 +42,7 @@ camera.resolution = (1024, 768)
 rawCapture = PiRGBArray(camera, size=(1024, 768))
 time.sleep(0.1) #Let camera warm up
 
-#Takes initial reference frame
+#Take initial reference frame
 camera.capture(rawCapture, format="bgr")
 initial_image = rawCapture.array
 rawCapture.truncate(0)
@@ -98,8 +76,9 @@ try:
         img = display_frame(screen, diff)
         screen.blit(c.cloud,(c.xpos, c.ypos))
         
-		c.update_pos(img)
-		print(c.xpos) 
+        c.update_pos(img)
+        print(c.xpos) 
+        
         ser.write(bytes(c.xpos, 'utf-8')) #send xpos to arduino
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
@@ -107,7 +86,7 @@ try:
 
         rawCapture.truncate(0) #clear stream for next picture
         
-		for event in pygame.event.get():
+        for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_SPACE: #press space to change reference frame
                     initial_image = image
@@ -122,6 +101,4 @@ except KeyboardInterrupt:
     ser.close()
     pygame.quit()
     print("Exiting program\n")
-
-
 
