@@ -16,6 +16,8 @@ pygame.display.set_caption("Reach for the Sky")
 screen = pygame.display.set_mode([display_width, display_height])
 c = Cloud(0, 100, 350, 200)
 
+os.environ["SDL_VIDEODRIVER"] = "fbcon"
+os.environ["SDL_FBDEV"] = "/dev/fb0"
 
 while(1):
 	ret, frame = cap.read( )

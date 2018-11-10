@@ -12,6 +12,15 @@ from picamera import PiCamera
 import time 
 import io 
 import serial 
+import argparse
+ 
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbosity", required=False, action="count", help="Verbose flag")
+args = parser.parse_args()
+verbose = False
+
+if args.verbosity: 
+    verbose = True
 
 #Opens serial port to connect with arduino
 try: 
@@ -26,14 +35,16 @@ try:
     if(ser.isOpen() == False):
         ser.open()
     time.sleep(1)
-    print("Connection established succesfully!\n")
+    if(verbose):
+        print("Connection established succesfully!\n")
 except Exception as e:
     print(e)
 
 #Set output to hdmi if monitor connected 
 os.environ["SDL_VIDEODRIVER"] = "fbcon"
 os.environ["SDL_FBDEV"] = "/dev/fb0"
-os.putenv('SDL_FBDEV', '/dev/fb0')
+
+
 
 #Set up camera
 camera = PiCamera()
@@ -46,7 +57,8 @@ time.sleep(0.1) #Let camera warm up
 camera.capture(rawCapture, format="bgr")
 initial_image = rawCapture.array
 rawCapture.truncate(0)
-print("Camera initialized\n");
+if(verbose):
+    print("Camera initialized\n");
 
 
 #Initialize pygame display
@@ -56,10 +68,12 @@ pygame.display.set_caption("Reach for the Sky")
 try: 
     screen = pygame.display.set_mode([display_width, display_height])
 except  pygame.error as message:
-    print ("Cannot initialize display\n")
+    if(verbose):
+        print ("Cannot initialize display\n")
     raise SystemExit(message)
 
-print("display intialized\n")
+if(verbose):
+    print("display intialized\n")
 c = Cloud(0, 100, 350, 200) #initializes Cloud
 
 print("Pygame initialzied\n");
@@ -77,12 +91,15 @@ try:
         screen.blit(c.cloud,(c.xpos, c.ypos))
         
         c.update_pos(img)
-        print(c.xpos) 
+        if(verbose):
+            print(c.xpos) 
         
         ser.write(bytes(c.xpos, 'utf-8')) #send xpos to arduino
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
             print(line)
+            #if(verbose):
+                #print(line)
 
         rawCapture.truncate(0) #clear stream for next picture
         
@@ -91,7 +108,8 @@ try:
                 if event.key == K_SPACE: #press space to change reference frame
                     initial_image = image
                 else:
-                    print("Exiting program\n")
+                    if(verbose):
+                        print("Exiting program\n")
                     ser.close()
                     pygame.quit()
                 
@@ -100,5 +118,6 @@ try:
 except KeyboardInterrupt: 
     ser.close()
     pygame.quit()
-    print("Exiting program\n")
+    if(verbose):
+        print("Exiting program\n")
 
