@@ -13,7 +13,8 @@ import time
 import io 
 import serial 
 import argparse
- 
+import struct 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbosity", required=False, action="count", help="Verbose flag")
 args = parser.parse_args()
@@ -48,9 +49,9 @@ os.environ["SDL_FBDEV"] = "/dev/fb0"
 
 #Set up camera
 camera = PiCamera()
-camera.framerate = 32
-camera.resolution = (1024, 768)
-rawCapture = PiRGBArray(camera, size=(1024, 768))
+camera.framerate = 2
+camera.resolution = (256, 160)
+rawCapture = PiRGBArray(camera, size=(256, 160))
 time.sleep(0.1) #Let camera warm up
 
 #Take initial reference frame
@@ -65,6 +66,8 @@ if(verbose):
 pygame.init()
 pygame.display.set_caption("Reach for the Sky")
 
+counter = 0
+
 try: 
     screen = pygame.display.set_mode([display_width, display_height])
 except  pygame.error as message:
@@ -74,7 +77,7 @@ except  pygame.error as message:
 
 if(verbose):
     print("display intialized\n")
-c = Cloud(0, 100, 350, 200) #initializes Cloud
+c = Cloud(0, 10, 35, 20) #initializes Cloud
 
 print("Pygame initialzied\n");
 
@@ -94,7 +97,12 @@ try:
         if(verbose):
             print(c.xpos) 
         
-        ser.write(bytes(c.xpos, 'utf-8')) #send xpos to arduino
+        if(counter > 10):
+            counter = 0
+            ser.write(struct.pack('>B', c.xpos)) #send xpos to arduino
+        
+        counter += 1
+
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
             print(line)

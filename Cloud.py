@@ -23,8 +23,8 @@ class Cloud:
 		self.up = pygame.Rect(self.xpos, self.ypos, self.width, self.height/2)
 		self.down = pygame.Rect(self.xpos, self.ypos + self.height/2, self.width, self.height/2) 
 
-		self.stepsize = 10 
-		self.driftsize = 2
+		self.stepsize = 5 
+		self.driftsize = 1
 
 	def move(self):
 		self.right.move_ip(self.x,self.y) #moves cloud in place by x and y
