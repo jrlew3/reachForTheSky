@@ -15,6 +15,7 @@ import serial
 import argparse
 import struct 
 
+#Parse verbose flag
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbosity", required=False, action="count", help="Verbose flag")
 args = parser.parse_args()
@@ -45,14 +46,13 @@ except Exception as e:
 os.environ["SDL_VIDEODRIVER"] = "fbcon"
 os.environ["SDL_FBDEV"] = "/dev/fb0"
 
-
-
 #Set up camera
 camera = PiCamera()
 camera.framerate = 2
-camera.resolution = (256, 160)
-rawCapture = PiRGBArray(camera, size=(256, 160))
+camera.resolution = (1280, 736)
+rawCapture = PiRGBArray(camera, size=(1280, 736))
 time.sleep(0.1) #Let camera warm up
+
 
 #Take initial reference frame
 camera.capture(rawCapture, format="bgr")
@@ -61,13 +61,9 @@ rawCapture.truncate(0)
 if(verbose):
     print("Camera initialized\n");
 
-
 #Initialize pygame display
 pygame.init()
 pygame.display.set_caption("Reach for the Sky")
-
-counter = 0
-
 try: 
     screen = pygame.display.set_mode([display_width, display_height])
 except  pygame.error as message:
@@ -77,9 +73,12 @@ except  pygame.error as message:
 
 if(verbose):
     print("display intialized\n")
-c = Cloud(0, 10, 35, 20) #initializes Cloud
 
-print("Pygame initialzied\n");
+c = Cloud(0, 100, 350, 200) #initializes Cloud
+counter = 0
+ser.write(struct.pack('>B',0));
+if(verbose):
+    print("Pygame initialzied\n");
 
 try: 
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port = True):
@@ -97,10 +96,11 @@ try:
         if(verbose):
             print(c.xpos) 
         
-        if(counter > 10):
+        if(c.stepper != 0 and counter > 5):
             counter = 0
-            ser.write(struct.pack('>B', c.xpos)) #send xpos to arduino
-        
+            ser.write(struct.pack('>B', c.stepper)) #send xpos to arduino
+            c.stepper = 0
+
         counter += 1
 
         if(ser.inWaiting() > 0): #print any messages from arduino
