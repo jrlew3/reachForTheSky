@@ -1,19 +1,14 @@
 import numpy as np
 import cv2 as cv
 import pygame
-import sys
-import os 
+import sys, os, io
 import RPi.GPIO as GPIO
 from pygame.locals import *
 from init import *
 from Cloud import *
 from picamera.array import PiRGBArray
 from picamera import PiCamera
-import time 
-import io 
-import serial 
-import argparse
-import struct 
+import time, serial, argparse, struct 
 
 #Parse verbose flag
 parser = argparse.ArgumentParser()
@@ -80,7 +75,7 @@ if(verbose):
 
 c = Cloud(0, 500, 350, 200) #initializes Cloud
 counter = 0
-ser.write(struct.pack('>B',0));
+ser.write(struct.pack('>B',0)); #send start message to arduino
 if(verbose):
     print("Pygame initialzied\n");
 
@@ -119,8 +114,8 @@ try:
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
             print(line)
-            #if(verbose):
-                #print(line)
+            if(verbose):
+                print(line)
 
         rawCapture.truncate(0) #clear stream for next picture
         
