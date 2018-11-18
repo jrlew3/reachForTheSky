@@ -61,6 +61,10 @@ rawCapture.truncate(0)
 if(verbose):
     print("Camera initialized\n");
 
+#Initialize frame/kernel for motion processing
+first_frame = None
+kernel = np.ones((5,5), np.uint8)
+
 #Initialize pygame display
 pygame.init()
 pygame.display.set_caption("Reach for the Sky")
@@ -83,15 +87,24 @@ if(verbose):
 try: 
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port = True):
 
-        image = frame.array
+        image = frame.array 
         diff = cv.absdiff(initial_image, image)
         gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
-        diff = cv.threshold(gray, bw_thresh, 255, cv.THRESH_BINARY)[1]
+        gray = cv.GaussianBlur(gray,(25,25),0)
 
-       	#displays image from picamera and cloud on top of it  
+        if first_frame is None:
+            first_frame = gray
+        
+        frameDelta = cv.absdiff(first_frame, gray)
+        diff = cv.threshold(frameDelta, 50, 255, cv.THRESH_BINARY)[1]
+        diff = cv.dilate(diff, kernel, iterations=2)
+        diff = cv.morphologyEx(diff, cv.MORPH_OPEN, kernel)
+       	
+        #displays image from picamera and cloud on top of it  
         img = display_frame(screen, diff)
         screen.blit(c.cloud,(c.xpos, c.ypos))
         
+
         c.update_pos(img)
         if(verbose):
             print(c.xpos) 
@@ -115,6 +128,7 @@ try:
             if event.type == KEYDOWN:
                 if event.key == K_SPACE: #press space to change reference frame
                     initial_image = image
+                    firstFrame = None
                 else:
                     if(verbose):
                         print("Exiting program\n")
