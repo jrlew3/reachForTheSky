@@ -24,9 +24,9 @@ class Cloud:
         self.down = pygame.Rect(self.xpos, self.ypos + self.height/2, self.width, self.height/2) 
                 
         self.stepper = 0
-        self.prev_step = 0
-        self.stepsize = 40 
-        self.driftsize = 40
+        self.prev_direction = 1
+        self.stepsize = 10 
+        self.driftsize = 10
 
     def move(self):
         self.set_stepper()
@@ -37,21 +37,15 @@ class Cloud:
         #self.down.move_ip(self.x,self.y)
         self.xpos += self.x #update x position
         #self.ypos += self.y
-        prev_step = self.x        
         self.x = 0 #reset distance to move to zero 
-        self.y = 0 
+        #self.y = 0 
 
     def set_stepper(self): 
         self.stepper = 0
-        """
-        if(abs(self.x) > abs(self.prev_step)): 
-            self.stepper += 4
-        elif (abs(self.x) < abs(self.prev_step)):
-            self.stepper += 2
-        """        
-        if(abs(self.x) + abs(self.prev_step) != self.x + self.prev_step):
-            self.stepper += 1
-                
+             
+        if(self.direction != self.prev_direction):
+            self.stepper = 1
+            self.prev_direction = self.direction
                 
     """ 
     Checks for collision in the specified region by getting the average color of the 
@@ -68,11 +62,12 @@ class Cloud:
             subcloud = self.left
         elif region == "right":
             subcloud = self.right
+        """
         elif region == "up":
             subcloud = self.up
         elif region == "down":
             subcloud = self.down 
-
+        """
         avg_color = pygame.transform.average_color(image, subcloud)
         return get_brightness(avg_color) > thresh 
 
@@ -89,23 +84,26 @@ class Cloud:
             if self.xpos <  display_width - self.stepsize - self.width: #checks if going offscreen
                 self.x = self.stepsize
                 self.direction = 1
-            elif self.check_region("right", image):
-                if self.xpos > self.stepsize:
-                    self.x = -self.stepsize
-                    self.direction = -1
-            if self.check_region("up", image):
-                if self.ypos < display_height - self.stepsize - self.height:
-                    self.y = self.stepsize
-            elif self.check_region("down", image):
-                if self.ypos > self.stepsize:
-                    self.y = -self.stepsize
-	
+        elif self.check_region("right", image):
+            if self.xpos > self.stepsize:
+                self.x = -self.stepsize
+                self.direction = -1
+        """        
+        if self.check_region("up", image):
+            if self.ypos < display_height - self.stepsize - self.height:
+                self.y = self.stepsize
+        elif self.check_region("down", image):
+            if self.ypos > self.stepsize:
+                self.y = -self.stepsize
+        
+        """
     """
     If there is no change in position, the cloud will automatically "drift" in the 
     correct direction
     """
     def drift(self): 
-        if self.x == 0 and self.y == 0: 
+        if self.x == 0:
+        #if self.x == 0 and self.y == 0: 
             if self.xpos <= self.driftsize:
                 self.direction = 1
             elif self.xpos >= display_width - self.width - self.driftsize: 
