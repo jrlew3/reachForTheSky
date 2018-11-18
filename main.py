@@ -1,3 +1,15 @@
+"""
+Currently uses Jen's version of background subtraction. 
+
+To run on the raspi: sudo python3 main.py 
+If you want the verbose flag on run: sudo python3 main.py -v 
+The verbose flag will print additional information like the current
+postion of cloud according to the raspi. 
+
+"""
+
+
+
 import numpy as np
 import cv2 as cv
 import pygame
@@ -9,6 +21,7 @@ from Cloud import *
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time, serial, argparse, struct 
+
 
 #Parse verbose flag
 parser = argparse.ArgumentParser()
@@ -114,8 +127,6 @@ try:
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
             print(line)
-            if(verbose):
-                print(line)
 
         rawCapture.truncate(0) #clear stream for next picture
         
