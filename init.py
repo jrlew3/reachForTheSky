@@ -4,7 +4,7 @@ import pygame
 import sys
 from pygame.locals import *
 
-thresh = 35  # the change in color required to move the cloud 
+thresh = 20  # the change in color required to move the cloud 
 bw_thresh = 50 # the threshold used in converting image to BW
 
 display_width = 1280

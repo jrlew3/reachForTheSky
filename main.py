@@ -8,8 +8,6 @@ postion of cloud according to the raspi.
 
 """
 
-
-
 import numpy as np
 import cv2 as cv
 import pygame
@@ -56,21 +54,17 @@ os.environ["SDL_FBDEV"] = "/dev/fb0"
 
 #Set up camera
 camera = PiCamera()
-camera.framerate = 10
+camera.framerate = 5
 camera.resolution = (1280, 736)
 rawCapture = PiRGBArray(camera, size=(1280, 736))
 time.sleep(0.1) #Let camera warm up
 
-
-#Take initial reference frame
-camera.capture(rawCapture, format="bgr")
-initial_image = rawCapture.array
-rawCapture.truncate(0)
 if(verbose):
     print("Camera initialized\n");
 
 #Initialize frame/kernel for motion processing
 first_frame = None
+initial_image = None
 kernel = np.ones((5,5), np.uint8)
 
 #Initialize pygame display
@@ -83,10 +77,8 @@ except  pygame.error as message:
         print ("Cannot initialize display\n")
     raise SystemExit(message)
 
-if(verbose):
-    print("display intialized\n")
 
-c = Cloud(0, 500, 350, 200) #initializes Cloud
+c = Cloud(0, 400, 350, 200) #initializes Cloud
 counter = 0
 ser.write(struct.pack('>B',0)); #send start message to arduino
 if(verbose):
@@ -96,6 +88,10 @@ try:
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port = True):
 
         image = frame.array 
+        
+        if initial_image is None:
+            initial_image = image
+
         diff = cv.absdiff(initial_image, image)
         gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
         gray = cv.GaussianBlur(gray,(25,25),0)
@@ -117,7 +113,7 @@ try:
         if(verbose):
             print(c.xpos) 
         
-        if(c.stepper != 0 and counter > 10):
+        if(c.stepper != 0 and counter > 5):
             counter = 0
             ser.write(struct.pack('>B', c.stepper)) #send xpos to arduino
             c.stepper = 0
@@ -126,13 +122,16 @@ try:
 
         if(ser.inWaiting() > 0): #print any messages from arduino
             line = ser.readline()
-            print(line)
+            print(int(line))
+            #print(struct.unpack(">B", line))
 
         rawCapture.truncate(0) #clear stream for next picture
         
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_SPACE: #press space to change reference frame
+                    if(verbose):
+                        print("Switching frames\n")
                     initial_image = image
                     firstFrame = None
                 else:
