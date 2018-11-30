@@ -54,7 +54,7 @@ os.environ["SDL_FBDEV"] = "/dev/fb0"
 
 #Set up camera
 camera = PiCamera()
-camera.framerate = 5
+camera.framerate = 10
 camera.resolution = (1280, 736)
 rawCapture = PiRGBArray(camera, size=(1280, 736))
 time.sleep(0.1) #Let camera warm up

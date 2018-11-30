@@ -12,18 +12,16 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time, serial, argparse, struct
 
-
-
 def detectFace(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = faceCascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
         minNeighbors=5,
-        minSize=(30,30),
+        minSize=(50,50),
     )
     
-    if(verbose) 
+    if(verbose): 
         print("Detecting face")
     
     maxArea = 0
@@ -33,37 +31,44 @@ def detectFace(frame):
     height = 0
     
     # Send largest face
-    for (x,y,w, h) in faces:
+    for (x, y, w, h) in faces:
         if w*h > maxArea:
             xpos = int(x)
             ypos = int(y)
             width = int(w)
-            hieght = int(h)
+            height = int(h)
             maxArea = w*h
 
-    if maxArea > 0:
+    if 0 < maxArea:
         bbox = (xpos, ypos, width, height)
         return bbox
     
     return None
-    
+
 
 def updateStepper(currPos, delta):
-    stepperPos = int(ser.readline())
+    global stepperDirection
+    stepperPos = ser.readline()
+    ser.flushInput()
     print("Message from Arduino: ", stepperPos)
-
-    if abs(stepperPos - currPos) < delta:
-        currDirection = 0
-    elif stepperPos <= currPos:
-        currDirection = 1
-    else: 
-        currDirection = -1
     
+    try:
+        stepperPos = int(stepperPos)
+    except Exception as e:
+        print(e)
+        return
+        
+    if abs(stepperPos - currPos) < delta:
+        currDirection = 1
+    elif stepperPos <= currPos:
+        currDirection = 2
+    else: 
+        currDirection = 4
+   
+    print("Current Direction: ", currDirection);
     if(currDirection != stepperDirection):
        stepperDirection = currDirection 
        ser.write(struct.pack('>B', currDirection))
-
-        
 
 
 # Parse verbose flag
@@ -88,8 +93,10 @@ try:
     if not ser.isOpen():
         ser.open()
         time.sleep(1)
-except as Exception as e:
-    preint(e)
+    if(verbose):
+        print("Connected to Arduino succesfully")
+except Exception as e:
+    print(e)
 
  
 # Initialize tracker 
@@ -100,32 +107,24 @@ if tracker_type == 'MOSSE':
     tracker = cv2.TrackerMOSSE_create()
 
 # Initialize face detection 
-faceCascade = cv2.CascadeClassifier("/data/haarcascades/haarcascade_frontalface_alt.xml")
-
-# Set up display
-os.environ["SDL_VIDEODRIVER"] = "fbcon"
-os.environ["SDL_FBDEV"] = "/dev/fb0" #use hdmi port
+faceCascade = cv2.CascadeClassifier("data/haarcascades/haarcascade_frontalface_alt.xml")
 
 # Set up camera
+displayWidth = 1280
+displayHeight = 736
 camera = PiCamera()
-camera.frameRate = 5
-camera.resolution = (1280, 736)
-rawCapture = PiRGBArray(camera, size=(1280,736))
+camera.framerate = 32
+camera.resolution = (displayWidth, displayHeight)
+rawCapture = PiRGBArray(camera, size=(displayWidth, displayHeight))
 time.sleep(0.1)
 
-# Initialize arduino variables
+
 stepperDirection = 0
-ser.write(struct.pack('>B', 0)); #send start message to arduino
-
-
-
 
 # ------------------------ BEGINNING OF MAIN LOOP ----------------------- #
 
 for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     frame = image.array
-    if(verbose)
-        print(Reset loop)
 
     # Get fps
     """
@@ -139,33 +138,32 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     if not trackingFace:
         bbox = detectFace(frame)
         if bbox is not None: 
+            print ("Bbox: ", bbox)
             tracker.init(frame, bbox)
             trackingFace = 1
 
     if trackingFace:
-        print("Tracking face")
         ok, bbox = tracker.update(frame)
         if not ok: 
             trackingFace = 0
-            continue
+            print("ERROR: Not ok"); 
+        else: 
+            p1 = (int(bbox[0]), int(bbox[1]))
+            p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+            cv2.rectangle(frame, p1, p2, (255,0,0),2,1)
+            
+            # image, center, radius, color, thickness, linetype, shift
+            xpos = int(bbox[0] + bbox[2]/2)
+            ypos = int(bbox[1])
+            cv2.circle(frame, (xpos, ypos), 10, (0,0, 255), -1) 
+            
 
-        p1 = (int(bbox[0]), int(bbox[1]))
-        p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-        cv2.rectangle(frame, p1, p2, (255,0,0),2,1)
-        """
-        # image, center, radius, color, thickness, linetype, shift
-        xpos = int(bbox[0] + bbox[2]/2)
-        ypos = int(bbox[1])
-        cv2.circle(frame, xpos, ypos, 10, (0,0,255), -1) 
-        """
+            if(ser.inWaiting() > 0):
+                delta = bbox[2]/4
+                updateStepper(xpos, delta)
 
-        if(ser.inWaiting() > 0):
-            currPos = int(bbox[0] + bbox[2]/2)
-            delta = bbox[2]/4
-            updateStepper(currPos, delta)
-
-    
-    #cv2.imshow("Tracking", frame)
+        if(time  
+    cv2.imshow("Tracking", frame)
     rawCapture.truncate(0) #clear stream for next picture
     
        
@@ -174,5 +172,3 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         break
 
 ser.close()
-
-
