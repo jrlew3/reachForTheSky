@@ -6,19 +6,20 @@ import numpy as np
 import cv2
 import sys, os, io
 import RPi.GPIO as GPIO
-from init import *
-from Cloud import *
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time, serial, argparse, struct
+from imutils.video import FPS
+from imutils.video.pivideostream import PiVideoStream
+import imutils
 
 def detectFace(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = faceCascade.detectMultiScale(
         gray,
-        scaleFactor=1.1,
+        scaleFactor=1.4,
         minNeighbors=5,
-        minSize=(50,50),
+        minSize=(100,100),
     )
     
     if(verbose): 
@@ -40,6 +41,10 @@ def detectFace(frame):
             maxArea = w*h
 
     if 0 < maxArea:
+        if xpos < 0 or displayWidth <  xpos + width:
+            return None 
+        if ypos < 0 or displayHeight < ypos + height:
+            return None
         bbox = (xpos, ypos, width, height)
         return bbox
     
@@ -69,7 +74,6 @@ def updateStepper(currPos, delta):
     if(currDirection != stepperDirection):
        stepperDirection = currDirection 
        ser.write(struct.pack('>B', currDirection))
-
 
 # Parse verbose flag
 parser = argparse.ArgumentParser()
@@ -101,74 +105,71 @@ except Exception as e:
  
 # Initialize tracker 
 trackingFace = 0 # Does not track face to begin with 
-tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
-tracker_type = tracker_types[6]
-if tracker_type == 'MOSSE':
+trackerTypes = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
+trackerType = "CSRT"
+if trackerType == 'MOSSE':
     tracker = cv2.TrackerMOSSE_create()
+elif trackerType == "CSRT":
+    tracker = cv2.TrackerCSRT_create()
+elif trackerType == "KCF":
+    tracker = cv2.TrackerKFC_create()
 
 # Initialize face detection 
 faceCascade = cv2.CascadeClassifier("data/haarcascades/haarcascade_frontalface_alt.xml")
 
 # Set up camera
-displayWidth = 1280
-displayHeight = 736
-camera = PiCamera()
-camera.framerate = 32
-camera.resolution = (displayWidth, displayHeight)
-rawCapture = PiRGBArray(camera, size=(displayWidth, displayHeight))
-time.sleep(0.1)
-
+displayWidth = 960
+displayHeight = 560
+stream = PiVideoStream((displayWidth, displayHeight), 32).start()
+time.sleep(2.0)
+fps = FPS().start()
 
 stepperDirection = 0
 
 # ------------------------ BEGINNING OF MAIN LOOP ----------------------- #
-
-for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    frame = image.array
-
-    # Get fps
-    """
-    timer = cv2.getTickCount()
-    fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
-    if(verbose)
-        print("FPS:", fps)
-    """
-
+while 1: 
+    frame = stream.read()
+    
     # Initialize tracker 
     if not trackingFace:
-        bbox = detectFace(frame)
-        if bbox is not None: 
-            print ("Bbox: ", bbox)
-            tracker.init(frame, bbox)
+        bbox1 = detectFace(frame)
+        if bbox1 is not None: 
+            print ("Bbox: ", bbox1)
+            tracker.init(frame, bbox1)
             trackingFace = 1
 
     if trackingFace:
         ok, bbox = tracker.update(frame)
+        
         if not ok: 
             trackingFace = 0
             print("ERROR: Not ok"); 
-        else: 
-            p1 = (int(bbox[0]), int(bbox[1]))
-            p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-            cv2.rectangle(frame, p1, p2, (255,0,0),2,1)
-            
-            # image, center, radius, color, thickness, linetype, shift
-            xpos = int(bbox[0] + bbox[2]/2)
-            ypos = int(bbox[1])
-            cv2.circle(frame, (xpos, ypos), 10, (0,0, 255), -1) 
-            
+            bbox = bbox1
+     
+        p1 = (int(bbox[0]), int(bbox[1]))
+        p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+        cv2.rectangle(frame, p1, p2, (255,0,0),2,1)
+        
+        # image, center, radius, color, thickness, linetype, shift
+        xpos = int(bbox[0] + bbox[2]/2)
+        ypos = int(bbox[1])
+        cv2.circle(frame, (xpos, ypos), 10, (0,0, 255), -1) 
+         
 
-            if(ser.inWaiting() > 0):
-                delta = bbox[2]/4
-                updateStepper(xpos, delta)
+        if(ser.inWaiting() > 0):
+            delta = bbox[2]/4
+            updateStepper(xpos, delta)
 
-        if(time  
     cv2.imshow("Tracking", frame)
-    rawCapture.truncate(0) #clear stream for next picture
-    
+    fps.update()
        
     k = cv2.waitKey(1) & 0xff
     if k == 27:
         break
+    elif k == 32:
+        print("Reseting")
+        trackingFace = 0
 
 ser.close()
+cv2.destroyAllWindows()
+stream.stop()
