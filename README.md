@@ -1,2 +1,2 @@
-# reach_for_the_sky
+# reachForTheSky
 16-223 Creative Kinetic Systems Final Project
